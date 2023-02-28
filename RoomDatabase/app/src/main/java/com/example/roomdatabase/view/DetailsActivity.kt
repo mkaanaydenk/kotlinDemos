@@ -1,10 +1,13 @@
-package com.example.roomdatabase
+package com.example.roomdatabase.view
 
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
+import android.graphics.Picture
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -16,8 +19,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.room.Room
+import com.example.roomdatabase.R
 import com.example.roomdatabase.databinding.ActivityDetailsBinding
+import com.example.roomdatabase.roomdb.PictureDao
+import com.example.roomdatabase.roomdb.PictureDatabase
 import com.google.android.material.snackbar.Snackbar
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.schedulers.Schedulers
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 
 class DetailsActivity : AppCompatActivity() {
 
@@ -25,6 +37,10 @@ class DetailsActivity : AppCompatActivity() {
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var permissionLauncher: ActivityResultLauncher<String>
     var selectedBitmap: Bitmap? = null
+    private lateinit var db: PictureDatabase
+    private lateinit var pictureDao: PictureDao
+    val compositeDisposable = CompositeDisposable()
+    var selectedPicture: com.example.roomdatabase.model.Picture? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +48,40 @@ class DetailsActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
         registerLauncher()
+
+        db = Room.databaseBuilder(applicationContext, PictureDatabase::class.java, "Pictures")
+            //.allowMainThreadQueries()
+            .build()
+        pictureDao = db.pictureDao()
+
+        val info = intent.getStringExtra("info")
+
+        if (info=="old") {
+
+            selectedPicture =
+                intent.getSerializableExtra("selectedPicture") as com.example.roomdatabase.model.Picture
+
+            selectedPicture?.let {
+
+                binding.nameText.setText(it.name)
+                binding.descriptionText.setText(it.descriptions)
+
+                val byteArray = it.image
+                val bitmap = byteArray?.let { it1 ->
+                    BitmapFactory.decodeByteArray(
+                        byteArray, 0,
+                        it1.size
+                    )
+                }
+                binding.imageView.setImageBitmap(bitmap)
+
+                binding.button.visibility = View.INVISIBLE
+
+            }
+
+
+        }
+
     }
 
     fun selectImage(view: View) {
@@ -106,6 +156,32 @@ class DetailsActivity : AppCompatActivity() {
 
     fun save(view: View) {
 
+        val name = binding.nameText.text.toString()
+        val description = binding.descriptionText.text.toString()
+
+        val outputStream = ByteArrayOutputStream()
+        selectedBitmap!!.compress(Bitmap.CompressFormat.PNG, 50, outputStream)
+        val byteArray = outputStream.toByteArray()
+
+        val picture: com.example.roomdatabase.model.Picture =
+            com.example.roomdatabase.model.Picture(name, description, byteArray)
+
+        compositeDisposable.add(
+
+            pictureDao.insert(picture)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::handlerResponse)
+        )
+
+    }
+
+    private fun handlerResponse() {
+
+        val intent = Intent(this, MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        startActivity(intent)
+
     }
 
     fun registerLauncher() {
@@ -164,5 +240,10 @@ class DetailsActivity : AppCompatActivity() {
 
     }
 
+
+    override fun onDestroy() {
+        compositeDisposable.clear()
+        super.onDestroy()
+    }
 
 }
