@@ -1,4 +1,4 @@
-package com.example.firebaseproject
+package com.example.firebaseproject.view
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -18,17 +18,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
 
-        val currentUser= auth.currentUser
-        if (currentUser!=null){
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
 
-            val intent= Intent(this@MainActivity,FeedActivity::class.java)
-            finish()
+            val intent = Intent(this@MainActivity, FeedActivity::class.java)
             startActivity(intent)
+            finish()
 
         }
 
         super.onStart()
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -42,21 +43,23 @@ class MainActivity : AppCompatActivity() {
         val email = binding.emailText.text.toString()
         val password = binding.passwordText.text.toString()
 
-        if (email.equals("")|| password.equals("")){
+        if (email.equals("") || password.equals("")) {
 
-            Toast.makeText(this@MainActivity,"E mail ve şifre boş bırakılamaz",Toast.LENGTH_LONG).show()
+            Toast.makeText(this@MainActivity, "E mail ve şifre boş bırakılamaz", Toast.LENGTH_LONG)
+                .show()
 
-        }else{
+        } else {
 
             auth.signInWithEmailAndPassword(email, password).addOnSuccessListener {
 
-                val intent= Intent(this@MainActivity,FeedActivity::class.java)
+                val intent = Intent(this@MainActivity, FeedActivity::class.java)
                 finish()
                 startActivity(intent)
 
             }.addOnFailureListener {
 
-                Toast.makeText(this@MainActivity,"Hatalı e posta veya şifre.",Toast.LENGTH_LONG).show()
+                Toast.makeText(this@MainActivity, "Hatalı e posta veya şifre.", Toast.LENGTH_LONG)
+                    .show()
 
             }
 
@@ -69,21 +72,25 @@ class MainActivity : AppCompatActivity() {
         val email = binding.emailText.text.toString()
         val password = binding.passwordText.text.toString()
 
-        if (email.equals("")|| password.equals("")){
+        if (email.equals("") || password.equals("")) {
 
-            Toast.makeText(this,"E mail ve şifre boş bırakılamaz",Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "E mail ve şifre boş bırakılamaz", Toast.LENGTH_LONG).show()
 
-        }else{
+        } else {
 
-            auth.createUserWithEmailAndPassword(email,password).addOnSuccessListener {
+            auth.createUserWithEmailAndPassword(email, password).addOnSuccessListener {
 
-                val intent = Intent(this@MainActivity,FeedActivity::class.java)
+                val intent = Intent(this@MainActivity, FeedActivity::class.java)
                 finish()
                 startActivity(intent)
 
             }.addOnFailureListener {
 
-                Toast.makeText(this@MainActivity,"Hata! böyle bir hesap zaten var veya başka bir şey. Parola da en az 6 hane olmalı. Gözden geçirin",Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this@MainActivity,
+                    "Hata! böyle bir hesap zaten var veya başka bir şey. Parola da en az 6 hane olmalı. Gözden geçirin",
+                    Toast.LENGTH_LONG
+                ).show()
 
             }
 
