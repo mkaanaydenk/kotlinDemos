@@ -44,6 +44,7 @@ class UploadActivity : AppCompatActivity() {
         auth= Firebase.auth
         firestore= Firebase.firestore
         storage= Firebase.storage
+        binding.button2.visibility= View.VISIBLE
     }
 
     fun shareButton(view: View) {
@@ -54,6 +55,8 @@ class UploadActivity : AppCompatActivity() {
         val imageReference= reference.child("images/").child(imageName)
 
         if (selectedUri!=null){
+
+            binding.button2.visibility= View.INVISIBLE
 
             imageReference.putFile(selectedUri!!).addOnSuccessListener {
 
